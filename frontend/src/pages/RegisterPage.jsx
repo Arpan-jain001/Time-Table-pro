@@ -32,8 +32,8 @@ export default function RegisterPage() {
     universityRollNumber: '',
     password: '',
     section: '',
-    year: '3rd Year',
-    session: '2025-26'
+    year: '4th Year',
+    session: '2026-27'
   })
   const [showPass, setShowPass] = useState(false)
   const [sections, setSections] = useState([])
@@ -46,7 +46,7 @@ export default function RegisterPage() {
     const fetchSections = async () => {
       setLoadingSections(true)
       try {
-        const { data } = await api.get('/sections', { params: { session: '2025-26' } })
+        const { data } = await api.get('/sections', { params: { session: '2026-27' } })
         setSections(Array.isArray(data?.sections) ? data.sections : [])
       } catch (error) {
         console.error('Failed to fetch sections for registration:', error)
@@ -116,7 +116,7 @@ export default function RegisterPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-indigo-300 mb-8"
               style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
               <Sparkles size={12} />
-              2025–26 Academic Batch
+              2026–27 Academic Batch
             </div>
 
             <h2 className="text-4xl font-black text-white leading-tight tracking-tight">
@@ -227,14 +227,14 @@ export default function RegisterPage() {
                 <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Session</label>
                 <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl pl-4 pr-4 py-3 text-slate-500 text-sm cursor-not-allowed flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                  2025-26
+                  2026-27
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Year</label>
                 <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl pl-4 pr-4 py-3 text-slate-500 text-sm cursor-not-allowed flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
-                  3rd Year
+                  4th Year
                 </div>
               </div>
             </div>

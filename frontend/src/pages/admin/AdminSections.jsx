@@ -15,13 +15,13 @@ export default function AdminSections() {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
-  const [form, setForm] = useState({ name: '', session: '2025-26', year: '3rd Year' })
+  const [form, setForm] = useState({ name: '', session: '2026-27', year: '4th Year' })
   const [saving, setSaving] = useState(false)
 
   const fetchSections = async () => {
     setLoading(true)
     try {
-      const { data } = await api.get('/sections', { params: { session: '2025-26' } })
+      const { data } = await api.get('/sections', { params: { session: '2026-27' } })
       setSections(data.sections)
     } catch { toast.error('Failed to load sections') }
     finally { setLoading(false) }
@@ -29,7 +29,7 @@ export default function AdminSections() {
 
   useEffect(() => { fetchSections() }, [])
 
-  const openAdd = () => { setForm({ name: '', session: '2025-26', year: '3rd Year' }); setModal('add') }
+  const openAdd = () => { setForm({ name: '', session: '2026-27', year: '4th Year' }); setModal('add') }
   const openEdit = (sec) => { setForm(sec); setModal('edit') }
 
   const handleSave = async () => {
@@ -84,7 +84,7 @@ export default function AdminSections() {
               <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-cyan-300 mb-1"
                 style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)' }}>
                 <Sparkles size={10} />
-                Session 2025-26
+                Session 2026-27
               </div>
               <h1 className="text-2xl font-black text-white tracking-tight">Sections</h1>
               <p className="text-slate-400 text-sm">{sections.length} active sections</p>
@@ -167,14 +167,14 @@ export default function AdminSections() {
                   <label className={labelClass}>Session</label>
                   <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl px-4 py-3 text-slate-400 text-sm cursor-not-allowed flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                    2025-26
+                    2026-27
                   </div>
                 </div>
                 <div>
                   <label className={labelClass}>Year</label>
                   <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl px-4 py-3 text-slate-400 text-sm cursor-not-allowed flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
-                    3rd Year
+                    4th Year
                   </div>
                 </div>
                 <div className="flex gap-3 pt-1">

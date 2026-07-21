@@ -264,8 +264,8 @@ router.post('/upload', protect, adminOnly, upload.single('file'), async (req, re
           const endTime = normalizeTime(getCell(row, ['EndTime', 'End Time', 'To', 'Finish']));
           const reminderBeforeMinutes = Number(getCell(row, ['ReminderBeforeMinutes', 'Reminder Minutes', 'ReminderBefore', 'Reminder'], 10));
           const type = getCell(row, ['Type', 'ClassType', 'Class Type'], 'Theory');
-          const session = getCell(row, ['Session', 'AcademicSession'], req.body.session || '2025-26');
-          const year = getCell(row, ['Year', 'AcademicYear'], req.body.year || '3rd Year');
+          const session = getCell(row, ['Session', 'AcademicSession'], req.body.session || '2026-27');
+          const year = getCell(row, ['Year', 'AcademicYear'], req.body.year || '4th Year');
 
           if (!day || !subjectName || !startTime || !endTime) continue;
 
@@ -331,8 +331,8 @@ router.post('/upload', protect, adminOnly, upload.single('file'), async (req, re
       const filePath = path.join(publicDir, fileName);
 
       // Archive previous references
-      const referenceSession = req.body.session || '2025-26';
-      const referenceYear = req.body.year || '3rd Year';
+      const referenceSession = req.body.session || '2026-27';
+      const referenceYear = req.body.year || '4th Year';
       await ReferenceFile.updateMany(
         { session: referenceSession, status: 'active' },
         { status: 'archived', isActive: false }
@@ -377,9 +377,9 @@ router.post('/', protect, adminOnly, async (req, res) => {
   try {
     const { section, day, startTime, session, year } = req.body;
     
-    // Ensure year is set for 2025-26 session
-    const finalYear = year || '3rd Year';
-    const finalSession = session || '2025-26';
+    // Ensure year is set for 2026-27 session
+    const finalYear = year || '4th Year';
+    const finalSession = session || '2026-27';
     
     // Auto-create section
     if (section && finalSession) {
@@ -417,8 +417,8 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
     // Ensure year is set for updates
     const updateData = {
       ...normalizeTimetablePayload(req.body),
-      year: req.body.year || original.year || '3rd Year',
-      session: req.body.session || original.session || '2025-26'
+      year: req.body.year || original.year || '4th Year',
+      session: req.body.session || original.session || '2026-27'
     };
 
     const updated = await Timetable.findByIdAndUpdate(req.params.id, updateData, { new: true });
@@ -498,7 +498,7 @@ router.post('/:id/cancel', protect, adminOnly, async (req, res) => {
 router.get('/reference/info', async (req, res) => {
   try {
     const refFile = await ReferenceFile.findOne({ 
-      session: '2025-26',
+      session: '2026-27',
       status: 'active', 
       isActive: true 
     }).sort({ uploadDate: -1 }).lean();
@@ -530,7 +530,7 @@ router.get('/reference/info', async (req, res) => {
 // @GET /api/timetable/reference/history - Get all reference files (admin only)
 router.get('/reference/history', protect, adminOnly, async (req, res) => {
   try {
-    const refFiles = await ReferenceFile.find({ session: '2025-26', isActive: true })
+    const refFiles = await ReferenceFile.find({ session: '2026-27', isActive: true })
       .sort({ uploadDate: -1 })
       .lean();
 

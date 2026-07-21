@@ -13,7 +13,7 @@ export default function AdminUpload() {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState(null)
-  const [session, setSession] = useState('2025-26')
+  const [session, setSession] = useState('2026-27')
   const [dragOver, setDragOver] = useState(false)
   const [refFile, setRefFile] = useState(null)
   const [loadingRef, setLoadingRef] = useState(false)
@@ -79,7 +79,7 @@ export default function AdminUpload() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('session', '2025-26')
+      formData.append('session', '2026-27')
       const { data } = await api.post('/timetable/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
@@ -123,7 +123,7 @@ export default function AdminUpload() {
             <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-indigo-300 mb-1"
               style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
               <Sparkles size={10} />
-              Session 2025-26
+              Session 2026-27
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">Upload Timetable</h1>
             <p className="text-slate-400 text-sm">Import from Excel spreadsheet</p>
@@ -153,14 +153,14 @@ export default function AdminUpload() {
           </div>
         </div>
 
-        {/* Session selector - Locked to 2025-26 */}
+        {/* Session selector - Locked to 2026-27 */}
         <div className="rounded-2xl p-5" style={PANEL}>
           <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Academic Session</label>
           <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl px-4 py-3 text-slate-400 text-sm cursor-not-allowed flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-            2025-26
+            2026-27
           </div>
-          <p className="text-slate-500 text-xs mt-2">Session is locked to 2025-26 for all uploads</p>
+          <p className="text-slate-500 text-xs mt-2">Session is locked to 2026-27 for all uploads</p>
         </div>
 
         {/* Current Reference File Status */}

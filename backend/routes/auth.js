@@ -5,6 +5,8 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { getFirebaseAdmin, isFirebaseReady } = require('../config/firebase');
+const Notification = require('../models/Notification');
+const { sendFCMNotification } = require('../utils/notificationScheduler');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -89,6 +91,43 @@ const buildResetEmailHtml = ({ name, resetUrl }) => `
   </div>
 `;
 
+const buildSectionUpdateEmailHtml = ({ name }) => `
+  <div style="margin:0;padding:0;background:#f4f7fb;font-family:Inter,Arial,sans-serif;color:#111827;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 12px;background:#f4f7fb;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;">
+            <tr>
+              <td style="background:linear-gradient(135deg,#4338ca,#6366f1);padding:28px 30px;color:#ffffff;">
+                <div style="font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:#e0e7ff;">Timetable Pro</div>
+                <h1 style="margin:8px 0 0;font-size:26px;line-height:1.2;">Please update your section</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 28px;">
+                <p style="margin:0 0 12px;font-size:16px;">Hi ${name || 'Student'},</p>
+                <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#4b5563;">
+                  Your profile section needs to be updated so you continue receiving the correct timetable updates, announcements, and class alerts.
+                </p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#4b5563;">
+                  Please open your profile page, select your correct section, and save the changes.
+                </p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/profile" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:13px 20px;border-radius:10px;font-weight:700;font-size:14px;">Open Profile</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;text-align:center;">
+                Powered by Timetable Pro<br>
+                Developed by Arpan Jain
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+`;
+
 const sendResetEmail = async ({ to, name, resetUrl }) => {
   if (!process.env.RESEND_API_KEY) {
     console.warn('RESEND_API_KEY not configured. Password reset email skipped.');
@@ -112,6 +151,34 @@ const sendResetEmail = async ({ to, name, resetUrl }) => {
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(`Resend email failed: ${detail}`);
+  }
+
+  return true;
+};
+
+const sendSectionUpdateEmail = async ({ to, name }) => {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not configured. Section reminder email skipped.');
+    return false;
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM || 'Timetable Pro <hello@urbantales-ecommerce.in>',
+      to,
+      subject: 'Please update your section on Timetable Pro',
+      html: buildSectionUpdateEmailHtml({ name })
+    })
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Section reminder email failed: ${detail}`);
   }
 
   return true;
@@ -277,8 +344,8 @@ router.post('/google/register', async (req, res) => {
       universityRollNumber: rollNumber,
       avatar: decoded.picture || null,
       section,
-      year: year || '3rd Year',
-      session: session || '2025-26',
+      year: year || '4th Year',
+      session: session || '2026-27',
       role: 'student',
       authProvider: 'google'
     });
@@ -430,13 +497,66 @@ router.post('/save-fcm-token', protect, async (req, res) => {
   }
 });
 
+// @POST /api/auth/send-section-update-notification
+router.post('/send-section-update-notification', protect, async (req, res) => {
+  try {
+    const { recipientEmail, recipientId, subject, message } = req.body;
+    const query = { isActive: true, role: { $in: ['student', 'admin'] } };
+
+    if (recipientEmail) {
+      query.email = recipientEmail.toLowerCase();
+    }
+    if (recipientId) {
+      query._id = recipientId;
+    }
+
+    const recipients = await User.find(query).select('name email fcmToken');
+
+    if (!recipients.length) {
+      return res.json({ success: true, sent: 0, message: 'No recipients found' });
+    }
+
+    const title = subject?.trim() || 'Please update your section';
+    const body = message?.trim() || 'Please update your section in your profile page so you keep receiving the correct timetable updates.';
+
+    await Notification.insertMany(recipients.map(recipient => ({
+      userId: recipient._id,
+      title,
+      message: body,
+      type: 'section_update_required',
+      sentAt: new Date(),
+      metadata: { route: '/profile' }
+    })));
+
+    const tokens = recipients.filter(recipient => recipient.fcmToken).map(recipient => recipient.fcmToken);
+    if (tokens.length > 0) {
+      await sendFCMNotification(tokens, title, body, {
+        type: 'section_update_required',
+        route: '/profile'
+      });
+    }
+
+    for (const recipient of recipients) {
+      if (recipient.email) {
+        await sendSectionUpdateEmail({ to: recipient.email, name: recipient.name });
+      }
+    }
+
+    res.json({ success: true, sent: recipients.length, message: 'Section update reminder sent' });
+  } catch (error) {
+    console.error('Section update notification error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @PUT /api/auth/profile
 router.put('/profile', protect, async (req, res) => {
   try {
     const { name, section, year, session } = req.body;
+    const normalizedSection = section?.toString().trim().toUpperCase();
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, section, year, session },
+      { name, section: normalizedSection || undefined, year, session },
       { new: true }
     );
     res.json({ success: true, user });

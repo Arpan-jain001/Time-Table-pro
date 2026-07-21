@@ -53,8 +53,8 @@ export default function LoginPage() {
       const idToken = await signInWithGoogle()
       const result = await dispatch(googleLoginUser({
         idToken,
-        session: '2025-26',
-        year: '3rd Year',
+        session: '2026-27',
+        year: '4th Year',
         role: isAdminMode ? 'admin' : 'student'
       }))
       redirectIfAccountNotFound(result)

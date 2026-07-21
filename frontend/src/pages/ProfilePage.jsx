@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { User, Mail, BookOpen, Save, LogOut, Hash } from 'lucide-react'
 import { logout } from '../store/slices/authSlice'
@@ -30,9 +30,27 @@ export default function ProfilePage() {
     name: user?.name || '',
     section: user?.section || '',
     year: user?.year || '',
-    session: user?.session || '2024-25',
+    session: user?.session || '2026-27',
   })
   const [saving, setSaving] = useState(false)
+  const [sectionOptions, setSectionOptions] = useState([])
+
+  useEffect(() => {
+    const loadSections = async () => {
+      try {
+        const { data } = await api.get('/sections', { params: { session: form.session || '2026-27' } })
+        const sections = Array.isArray(data?.sections)
+          ? data.sections.map(section => (section?.name || '').toString().trim().toUpperCase())
+          : []
+        const uniqueSections = Array.from(new Set([...sections, (form.section || '').toString().trim().toUpperCase()].filter(Boolean)))
+        setSectionOptions(uniqueSections)
+      } catch (error) {
+        console.error('Unable to load sections for profile:', error)
+      }
+    }
+
+    loadSections()
+  }, [form.session])
 
   const handleSave = async () => {
     setSaving(true)
@@ -174,12 +192,15 @@ export default function ProfilePage() {
 
           <div>
             <FieldLabel>Section</FieldLabel>
-            <input
-              type="text"
+            <select
               value={form.section}
               onChange={e => setForm({ ...form, section: e.target.value })}
-              className={inputClass}
-              placeholder="e.g. 3A" />
+              className={selectClass}>
+              <option value="" style={{ background: '#0d1224' }}>Select section</option>
+              {sectionOptions.map(section => (
+                <option key={section} value={section} style={{ background: '#0d1224' }}>{section}</option>
+              ))}
+            </select>
           </div>
 
           <div className="pt-1">

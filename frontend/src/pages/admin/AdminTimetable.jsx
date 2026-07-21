@@ -18,7 +18,7 @@ const TIME_SLOTS = [
   { label: '03:00 PM - 04:00 PM', start: '03:00 PM', end: '04:00 PM' },
 ]
 
-const EMPTY = { session: '2025-26', year: '3rd Year', section: '', day: 'Monday', subjectName: '', subjectCode: '', facultyName: '', room: '', block: '', startTime: '08:00 AM', endTime: '09:00 AM', reminderBeforeMinutes: 10, type: 'Theory' }
+const EMPTY = { session: '2026-27', year: '4th Year', section: '', day: 'Monday', subjectName: '', subjectCode: '', facultyName: '', room: '', block: '', startTime: '08:00 AM', endTime: '09:00 AM', reminderBeforeMinutes: 10, type: 'Theory' }
 const HOURS = Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, '0'))
 const MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0'))
 
@@ -79,19 +79,19 @@ export default function AdminTimetable() {
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
-  const [filter, setFilter] = useState({ section: '', day: '', session: '2025-26' })
+  const [filter, setFilter] = useState({ section: '', day: '', session: '2026-27' })
   const [sections, setSections] = useState([])
   const [selectedSlots, setSelectedSlots] = useState([])
   const [selectedSections, setSelectedSections] = useState([])
 
   useEffect(() => {
-    dispatch(fetchAllTimetable({ session: '2025-26' }))
+    dispatch(fetchAllTimetable({ session: '2026-27' }))
     fetchSections()
   }, [dispatch])
 
   const fetchSections = async () => {
     try {
-      const { data } = await api.get('/sections', { params: { session: '2025-26' } })
+      const { data } = await api.get('/sections', { params: { session: '2026-27' } })
       setSections(data.sections || [])
     } catch (err) {
       console.error('Failed to fetch sections:', err)
@@ -165,8 +165,8 @@ export default function AdminTimetable() {
       if (modal === 'edit') {
         const dataToSend = {
           ...form,
-          year: '3rd Year',
-          session: '2025-26'
+          year: '4th Year',
+          session: '2026-27'
         }
         await api.put(`/timetable/${form._id}`, dataToSend)
         toast.success('Entry updated')
@@ -179,8 +179,8 @@ export default function AdminTimetable() {
             entriesToCreate.push({
               ...form,
               section: section,
-              year: '3rd Year',
-              session: '2025-26',
+              year: '4th Year',
+              session: '2026-27',
               startTime: slot.start,
               endTime: slot.end,
             })
@@ -196,7 +196,7 @@ export default function AdminTimetable() {
       }
 
       closeModal()
-      dispatch(fetchAllTimetable({ session: '2025-26' }))
+      dispatch(fetchAllTimetable({ session: '2026-27' }))
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save')
     } finally {
@@ -222,7 +222,7 @@ export default function AdminTimetable() {
         await api.delete(`/timetable/${id}`)
         toast.success('Entry archived')
       }
-      dispatch(fetchAllTimetable({ session: '2025-26' }))
+      dispatch(fetchAllTimetable({ session: '2026-27' }))
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete')
     }
@@ -234,7 +234,7 @@ export default function AdminTimetable() {
     try {
       await api.post(`/timetable/${id}/cancel`, { reason })
       toast.success('Class cancelled')
-      dispatch(fetchAllTimetable({ session: '2025-26' }))
+      dispatch(fetchAllTimetable({ session: '2026-27' }))
     } catch { toast.error('Failed') }
   }
 
@@ -274,7 +274,7 @@ export default function AdminTimetable() {
               <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-indigo-300 mb-1"
                 style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
                 <Sparkles size={10} />
-                Session 2025-26
+                Session 2026-27
               </div>
               <h1 className="text-2xl font-black text-white tracking-tight">Timetable Management</h1>
               <p className="text-slate-400 text-sm">{filtered.length} entries · {sectionList.length} sections</p>
@@ -329,7 +329,7 @@ export default function AdminTimetable() {
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <CalendarDays size={13} className="text-indigo-400" />
               <span className="text-xs text-slate-400 font-medium">Session:</span>
-              <span className="text-sm font-semibold text-slate-200">2025-26</span>
+              <span className="text-sm font-semibold text-slate-200">2026-27</span>
             </div>
 
             <select value={filter.section} onChange={e => setFilter({ ...filter, section: e.target.value })}
@@ -352,7 +352,7 @@ export default function AdminTimetable() {
             </button>
 
             {(filter.section || filter.day) && (
-              <button onClick={() => setFilter({ section: '', day: '', session: '2025-26' })}
+              <button onClick={() => setFilter({ section: '', day: '', session: '2026-27' })}
                 className="px-3 py-2 text-xs rounded-xl text-slate-400 hover:text-white transition-colors duration-200"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 Clear
@@ -448,14 +448,14 @@ export default function AdminTimetable() {
                     <label className={labelClass}>Session</label>
                     <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl px-4 py-3 text-slate-500 text-sm cursor-not-allowed flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                      2025-26
+                      2026-27
                     </div>
                   </div>
                   <div>
                     <label className={labelClass}>Year</label>
                     <div className="w-full bg-white/[0.03] border border-white/6 rounded-xl px-4 py-3 text-slate-500 text-sm cursor-not-allowed flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
-                      3rd Year
+                      4th Year
                     </div>
                   </div>
                 </div>

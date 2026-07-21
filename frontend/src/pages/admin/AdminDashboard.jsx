@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   Users, BookOpen, GraduationCap, LayoutGrid, TrendingUp, Activity,
   Upload, CalendarDays, School, PartyPopper, UserPlus, ShieldCheck,
-  ArrowUpRight, Sparkles
+  ArrowUpRight, Sparkles, Mail, Send, Eye
 } from 'lucide-react'
 import api from '../../services/api'
 
@@ -56,6 +57,12 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ totalStudents: 0, totalSections: 0, totalSubjects: 0, totalEntries: 0 })
   const [loading, setLoading] = useState(true)
   const [now, setNow] = useState(new Date())
+  const [broadcastSubject, setBroadcastSubject] = useState('Important update from Timetable Pro')
+  const [broadcastMessage, setBroadcastMessage] = useState('Hello team,\n\nPlease check the latest timetable updates and keep your profile section updated for accurate notifications.\n\nThank you.')
+  const [sendingBroadcast, setSendingBroadcast] = useState(false)
+  const [sectionReminderSubject, setSectionReminderSubject] = useState('Please update your section')
+  const [sectionReminderMessage, setSectionReminderMessage] = useState('Hello,\n\nPlease update your section in your profile page so you continue receiving the correct timetable updates and class alerts.\n\nThank you.')
+  const [sendingSectionReminder, setSendingSectionReminder] = useState(false)
 
   useEffect(() => {
     api.get('/admin/stats')
@@ -89,6 +96,46 @@ export default function AdminDashboard() {
 
   const dateStr = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+
+  const handleBroadcastSend = async () => {
+    if (!broadcastSubject.trim() || !broadcastMessage.trim()) {
+      toast.error('Please add both subject and message before sending')
+      return
+    }
+
+    setSendingBroadcast(true)
+    try {
+      const { data } = await api.post('/admin/broadcast-email', {
+        subject: broadcastSubject.trim(),
+        message: broadcastMessage.trim()
+      })
+      toast.success(data.message || 'Broadcast email sent successfully')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send broadcast email')
+    } finally {
+      setSendingBroadcast(false)
+    }
+  }
+
+  const handleSectionReminderSend = async () => {
+    if (!sectionReminderSubject.trim() || !sectionReminderMessage.trim()) {
+      toast.error('Please add both subject and message before sending')
+      return
+    }
+
+    setSendingSectionReminder(true)
+    try {
+      const { data } = await api.post('/admin/send-section-update-notification', {
+        subject: sectionReminderSubject.trim(),
+        message: sectionReminderMessage.trim()
+      })
+      toast.success(data.message || 'Section reminder sent successfully')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send section reminder')
+    } finally {
+      setSendingSectionReminder(false)
+    }
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden"
@@ -142,6 +189,128 @@ export default function AdminDashboard() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             {adminActions.map(a => <ActionCard key={a.to} {...a} />)}
+          </div>
+        </div>
+
+        {/* Broadcast Mail */}
+        <div className="rounded-2xl p-5"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-white flex items-center gap-2">
+                <Mail size={16} className="text-indigo-400" />
+                Broadcast Email
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">Send an announcement email to all active users and admins.</p>
+            </div>
+            <button
+              onClick={handleBroadcastSend}
+              disabled={sendingBroadcast}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {sendingBroadcast ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Send size={15} />}
+              {sendingBroadcast ? 'Sending…' : 'Send to all'}
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-3">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">Subject</label>
+                <input
+                  value={broadcastSubject}
+                  onChange={(e) => setBroadcastSubject(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm text-white outline-none ring-0"
+                  placeholder="Enter email subject"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">Message</label>
+                <textarea
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  rows={8}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm text-white outline-none ring-0"
+                  placeholder="Write your email message here"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-indigo-500/20 bg-slate-950/70 p-4">
+              <div className="flex items-center gap-2 text-indigo-300">
+                <Eye size={15} />
+                <span className="text-sm font-semibold">Preview</span>
+              </div>
+              <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-indigo-300">Subject</p>
+                <p className="mt-1 text-sm font-semibold text-white">{broadcastSubject || 'Your subject here'}</p>
+                <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-indigo-300">Message</p>
+                <div className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+                  {broadcastMessage || 'Your message preview will appear here.'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Reminder Mail */}
+        <div className="rounded-2xl p-5"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-white flex items-center gap-2">
+                <Mail size={16} className="text-amber-400" />
+                Section Update Reminder
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">Preview and send the section update reminder to all active users and admins.</p>
+            </div>
+            <button
+              onClick={handleSectionReminderSend}
+              disabled={sendingSectionReminder}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {sendingSectionReminder ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Send size={15} />}
+              {sendingSectionReminder ? 'Sending…' : 'Send reminder'}
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-3">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">Subject</label>
+                <input
+                  value={sectionReminderSubject}
+                  onChange={(e) => setSectionReminderSubject(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm text-white outline-none ring-0"
+                  placeholder="Enter reminder subject"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">Message</label>
+                <textarea
+                  value={sectionReminderMessage}
+                  onChange={(e) => setSectionReminderMessage(e.target.value)}
+                  rows={7}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm text-white outline-none ring-0"
+                  placeholder="Write your reminder message here"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-amber-500/20 bg-slate-950/70 p-4">
+              <div className="flex items-center gap-2 text-amber-300">
+                <Eye size={15} />
+                <span className="text-sm font-semibold">Preview</span>
+              </div>
+              <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-amber-300">Subject</p>
+                <p className="mt-1 text-sm font-semibold text-white">{sectionReminderSubject || 'Your subject here'}</p>
+                <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-amber-300">Message</p>
+                <div className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+                  {sectionReminderMessage || 'Your reminder preview will appear here.'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
